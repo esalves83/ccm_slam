@@ -22,6 +22,8 @@
 * along with CCM-SLAM. If not, see <http://www.gnu.org/licenses/>.
 */
 
+#include<chrono>
+
 #include <cslam/ClientHandler.h>
 
 namespace cslam {
@@ -262,7 +264,7 @@ void ClientHandler::SetMapMatcher(matchptr pMatch)
 }
 
 void ClientHandler::CamImgCb(sensor_msgs::ImageConstPtr pMsg)
-{
+{    
     // Copy the ros image message to cv::Mat.
     cv_bridge::CvImageConstPtr cv_ptr;
 
@@ -285,8 +287,17 @@ void ClientHandler::CamImgCb(sensor_msgs::ImageConstPtr pMsg)
             mbReset = false;
         }
     }
-
+    
+    std::chrono::steady_clock::time_point t1 = std::chrono::steady_clock::now();
+    
+    // Pass the images to the tracking module
     mpTracking->GrabImageMonocular(cv_ptr->image,cv_ptr->header.stamp.toSec());
+    
+    std::chrono::steady_clock::time_point t2 = std::chrono::steady_clock::now();
+
+    double ttrack= std::chrono::duration_cast<std::chrono::duration<double> >(t2 - t1).count();
+    
+    cout << "tracking time: " << ttrack << endl;
 }
 
 void ClientHandler::Reset()
